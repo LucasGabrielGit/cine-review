@@ -30,7 +30,7 @@ export class ReviewController {
           movie_series_id
         },
         include: {
-          user: { select: { followers: true, profile_image: true, username: true } },
+          user: { select: { profile_image: true, username: true } },
         }
       })
 

@@ -34,7 +34,7 @@ app.delete('/movie-series/:id', { preHandler: ensureAuthenticate }, movieSeriesC
 
 // Reviews controllers routes
 app.post('/review', { preHandler: ensureAuthenticate }, reviewController.create)
-app.get('/reviews/movie/:movie_series_id', { preHandler: ensureAuthenticate }, reviewController.findByMovie)
+app.get('/reviews/movie-series/:movie_series_id', { preHandler: ensureAuthenticate }, reviewController.findByMovie)
 
 // Follower controllers routes
 app.post('/follower', { preHandler: ensureAuthenticate }, followerController.followUser)
