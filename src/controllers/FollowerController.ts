@@ -8,29 +8,31 @@ export class FollowerController {
     try {
       const { user_id, follower_id } = req.body as { user_id: string, follower_id: string }
 
-      const existingFollow = await prisma.follower.findUnique({
+      if (user_id === follower_id) {
+        return res.status(400).send({ message: "You cannot follow yourself" });
+      }
+
+      const existingFollow = await prisma.follower.findFirst({
         where: {
           user_id: follower_id,
-          follower_id: user_id
+          followed_user_id: user_id
         }
-      })
+      });
 
       if (existingFollow) {
-        // Deixar de seguir o usuário
-        await prisma.follower.delete({
+        await prisma.follower.deleteMany({
           where: {
             user_id: follower_id,
-            follower_id: user_id
+            followed_user_id: user_id
           }
-        })
-        return res.status(200).send({ message: "Unfollowed successfully" })
+        });
+        return res.status(200).send({ message: "Unfollowed successfully" });
       }
 
       // Seguir o usuário
       await prisma.follower.create({
         data: {
-          user_id,
-          follower_id,
+          user_id: follower_id,
           followed_user_id: user_id
         }
       })

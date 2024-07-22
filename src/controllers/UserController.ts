@@ -41,6 +41,32 @@ export class UserController {
       const user = await prisma.user.findFirst({
         where: {
           user_id: id
+        },
+        include: {
+          followers: {
+            select: {
+              followed_user: { // Informação do seguidor
+                select: {
+                  user_id: true,
+                  profile_image: true,
+                  username: true,
+                  email: true
+                }
+              }
+            }
+          },
+          following: {
+            select: {
+              user: { // Informação do usuário seguido
+                select: {
+                  user_id: true,
+                  profile_image: true,
+                  username: true,
+                  email: true
+                }
+              }
+            }
+          }
         }
       })
 
@@ -71,10 +97,32 @@ export class UserController {
           profile_image: true,
           username: true,
           reviews: true,
-          followers: true,
+          followers: {
+            select: {
+              followed_user: {
+                select: {
+                  user_id: true,
+                  username: true,
+                  email: true,
+                  profile_image: true,
+                }
+              }
+            }
+          },
           comments: true,
           favorites: true,
-          following: true,
+          following: {
+            select: {
+              user: {
+                select: {
+                  user_id: true,
+                  username: true,
+                  email: true,
+                  profile_image: true,
+                }
+              }
+            }
+          },
           watchlist: true
         }
       })

@@ -5,6 +5,7 @@ import { MovieSeriesController } from "./controllers/MovieSeriesController";
 import { ReviewController } from "./controllers/ReviewsController";
 import { FollowerController } from "./controllers/FollowerController";
 import { ensureAuthenticate } from "./middlewares/ensureAuthenticate";
+import { CommentController } from "./controllers/CommentController";
 
 const app = fastify()
 
@@ -13,6 +14,7 @@ const userController = new UserController()
 const movieSeriesController = new MovieSeriesController()
 const reviewController = new ReviewController()
 const followerController = new FollowerController()
+const commentController = new CommentController()
 
 app.register(fastifyCors, {
   origin: "*"
@@ -40,6 +42,10 @@ app.get('/reviews/movie-series/:movie_series_id', { preHandler: ensureAuthentica
 app.post('/follower', { preHandler: ensureAuthenticate }, followerController.followUser)
 app.get('/followers/:user_id', { preHandler: ensureAuthenticate }, followerController.getFollowers)
 
+// Comment controller routes
+app.post('/comment', { preHandler: ensureAuthenticate }, commentController.create)
+
+// Start server
 app.listen({ port: 3000 || process.env.PORT, host: "0.0.0.0" }, (err, address) => {
   if (err) {
     console.error(err)

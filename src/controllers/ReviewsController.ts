@@ -31,6 +31,18 @@ export class ReviewController {
         },
         include: {
           user: { select: { profile_image: true, username: true } },
+          comments: {
+            select: {
+              content: true,
+              created_at: true,
+              user: {
+                select: {
+                  username: true,
+                  profile_image: true
+                }
+              }
+            }
+          }
         }
       })
 
