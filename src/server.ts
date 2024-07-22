@@ -6,6 +6,7 @@ import { ReviewController } from "./controllers/ReviewsController";
 import { FollowerController } from "./controllers/FollowerController";
 import { ensureAuthenticate } from "./middlewares/ensureAuthenticate";
 import { CommentController } from "./controllers/CommentController";
+import { FavoritesController } from "./controllers/FavoritesController";
 
 const app = fastify()
 
@@ -15,13 +16,14 @@ const movieSeriesController = new MovieSeriesController()
 const reviewController = new ReviewController()
 const followerController = new FollowerController()
 const commentController = new CommentController()
+const favoriteController = new FavoritesController()
 
 app.register(fastifyCors, {
   origin: "*"
 })
 // User controllers routes
 app.post('/user', userController.create)
-app.get('/users', { preHandler: ensureAuthenticate }, userController.list)
+app.post('/users', { preHandler: ensureAuthenticate }, userController.list)
 app.get('/user/:id', { preHandler: ensureAuthenticate }, userController.findById)
 app.put('/user/:id', { preHandler: ensureAuthenticate }, userController.update)
 app.delete('/user/:id', { preHandler: ensureAuthenticate }, userController.delete)
@@ -44,6 +46,12 @@ app.get('/followers/:user_id', { preHandler: ensureAuthenticate }, followerContr
 
 // Comment controller routes
 app.post('/comment', { preHandler: ensureAuthenticate }, commentController.create)
+app.delete('/comment/:id', { preHandler: ensureAuthenticate }, commentController.delete)
+app.put('/comment/:id', { preHandler: ensureAuthenticate }, commentController.update)
+
+// Favorite controller routes
+app.post('/favorite', { preHandler: ensureAuthenticate }, favoriteController.addToFavorites)
+app.get('/favorites/:user_id', { preHandler: ensureAuthenticate }, favoriteController.getFavorites)
 
 // Start server
 app.listen({ port: 3000 || process.env.PORT, host: "0.0.0.0" }, (err, address) => {

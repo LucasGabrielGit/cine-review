@@ -66,7 +66,8 @@ export class UserController {
                 }
               }
             }
-          }
+          },
+          reviews: true
         }
       })
 
@@ -89,43 +90,94 @@ export class UserController {
 
   async list(req: FastifyRequest, res: FastifyReply) {
     try {
-      const users = await prisma.user.findMany({
-        select: {
-          user_id: true,
-          bio: true,
-          email: true,
-          profile_image: true,
-          username: true,
-          reviews: true,
-          followers: {
-            select: {
-              followed_user: {
-                select: {
-                  user_id: true,
-                  username: true,
-                  email: true,
-                  profile_image: true,
+      const { username, name } = req.body as { username: string, name: string }
+
+      let users: any = []
+
+      if ((username !== undefined || name !== undefined)) {
+        users = await prisma.user.findMany({
+          where: {
+            username: { contains: username },
+            name: { mode: "insensitive", contains: name },
+          },
+          select: {
+            user_id: true,
+            bio: true,
+            email: true,
+            profile_image: true,
+            username: true,
+            name: true,
+            reviews: true,
+            followers: {
+              select: {
+                followed_user: {
+                  select: {
+                    user_id: true,
+                    username: true,
+                    email: true,
+                    profile_image: true,
+                  }
                 }
               }
-            }
-          },
-          comments: true,
-          favorites: true,
-          following: {
-            select: {
-              user: {
-                select: {
-                  user_id: true,
-                  username: true,
-                  email: true,
-                  profile_image: true,
+            },
+            comments: true,
+            favorites: true,
+            following: {
+              select: {
+                user: {
+                  select: {
+                    user_id: true,
+                    username: true,
+                    email: true,
+                    profile_image: true,
+                  }
                 }
               }
-            }
-          },
-          watchlist: true
-        }
-      })
+            },
+            watchlist: true
+          }
+        })
+      } else {
+        users = await prisma.user.findMany({
+          select: {
+            user_id: true,
+            bio: true,
+            email: true,
+            profile_image: true,
+            username: true,
+            name: true,
+            reviews: true,
+            followers: {
+              select: {
+                followed_user: {
+                  select: {
+                    user_id: true,
+                    username: true,
+                    email: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
+            comments: true,
+            favorites: true,
+            following: {
+              select: {
+                user: {
+                  select: {
+                    user_id: true,
+                    username: true,
+                    email: true,
+                    profile_image: true,
+                  }
+                }
+              }
+            },
+            watchlist: true
+          }
+        })
+      }
+
       if (users.length == 0) {
         return res.status(404).send({ message: "No users found" })
       }

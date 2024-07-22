@@ -16,12 +16,14 @@ model User {
   bio           String
   created_at    DateTime    @default(now())
   updated_at    DateTime    @updatedAt
-  reviews       Review[]
+  name          String?
+  surname       String?
   comments      Comment[]
   favorites     Favorite[]
-  watchlist     Watchlist[]
-  followers     Follower[]
   following     Follower[]  @relation("Following")
+  followers     Follower[]
+  reviews       Review[]
+  watchlist     Watchlist[]
 }
 
 model MovieSeries {
@@ -29,7 +31,7 @@ model MovieSeries {
   title        String
   description  String      @db.VarChar(1000)
   release_date DateTime
-  genre        String
+  genre        Genre[]
   director     String
   cast         String
   trailer_url  String
@@ -37,9 +39,17 @@ model MovieSeries {
   type         String
   created_at   DateTime    @default(now())
   updated_at   DateTime    @updatedAt
-  reviews      Review[]
   favorites    Favorite[]
+  reviews      Review[]
   watchlist    Watchlist[]
+}
+
+model Genre {
+  genre_id    String        @id @default(cuid())
+  name        String
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  movieSeries MovieSeries[]
 }
 
 model Review {
@@ -69,26 +79,26 @@ model Comment {
 model Favorite {
   favorite_id     String      @id @default(cuid())
   user_id         String
-  user            User        @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   movie_series_id String
-  movie_series    MovieSeries @relation(fields: [movie_series_id], references: [id], onDelete: Cascade)
   created_at      DateTime    @default(now())
+  movie_series    MovieSeries @relation(fields: [movie_series_id], references: [id], onDelete: Cascade)
+  user            User        @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
 model Watchlist {
   watchlist_id    String      @id @default(cuid())
   user_id         String
-  user            User        @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   movie_series_id String
-  movie_series    MovieSeries @relation(fields: [movie_series_id], references: [id], onDelete: Cascade)
   created_at      DateTime    @default(now())
+  movie_series    MovieSeries @relation(fields: [movie_series_id], references: [id], onDelete: Cascade)
+  user            User        @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
 model Follower {
   follower_id      String   @id @default(cuid())
   user_id          String
-  user             User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   followed_user_id String
-  followed_user    User     @relation("Following", fields: [followed_user_id], references: [user_id], onDelete: Cascade)
   created_at       DateTime @default(now())
+  followed_user    User     @relation("Following", fields: [followed_user_id], references: [user_id], onDelete: Cascade)
+  user             User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }

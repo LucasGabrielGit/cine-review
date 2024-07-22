@@ -56,8 +56,6 @@ export class ReviewController {
     }
   }
 
-  async findByUser(req: FastifyRequest, res: FastifyReply) { }
-
   async list(req: FastifyRequest, res: FastifyReply) { }
 
   async update(req: FastifyRequest, res: FastifyReply) { }
