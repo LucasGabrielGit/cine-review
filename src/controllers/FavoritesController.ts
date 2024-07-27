@@ -5,6 +5,25 @@ export class FavoritesController {
   async addToFavorites(req: FastifyRequest, res: FastifyReply) {
     try {
       const { user_id, movie_series_id } = req.body as { user_id: string, movie_series_id: string }
+
+      // verifica se o filme ou serie ja foi favoritado pelo usuário
+      const checkFavorite = await prisma.favorite.findFirst({
+        where: {
+          user_id,
+          movie_series_id
+        }
+      })
+      //se o filme ou serie ja foi favoritado, remove o favorito
+      if (checkFavorite) {
+        await prisma.favorite.deleteMany({
+          where: {
+            user_id,
+            movie_series_id
+          }
+        })
+        return res.status(200).send({ message: 'Removed from favorites' })
+      }
+
       const favorite = await prisma.favorite.create({
         data: {
           user_id,
