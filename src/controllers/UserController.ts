@@ -67,7 +67,8 @@ export class UserController {
               }
             }
           },
-          reviews: true
+          reviews: true,
+          favorites: true
         }
       })
 
@@ -94,11 +95,11 @@ export class UserController {
 
       let users: any = []
 
-      if ((username !== undefined || name !== undefined)) {
+      if ((username !== '' || name !== '')) {
         users = await prisma.user.findMany({
           where: {
             username: { contains: username },
-            name: { mode: "insensitive", contains: name },
+            name: { contains: name }
           },
           select: {
             user_id: true,
@@ -267,10 +268,12 @@ export class UserController {
           profile_image: true,
           password_hash: true,
           username: true,
+          name: true,
+          surname: true,
           favorites: true,
           followers: {
             select: {
-              user: {
+              followed_user: {
                 select: {
                   email: true,
                   profile_image: true,
@@ -319,7 +322,20 @@ export class UserController {
 
 
       return res.status(200).send({
-        token, user
+        token, user: {
+          user_id: user.user_id,
+          name: user.name,
+          surname: user.surname,
+          username: user.username,
+          email: user.email,
+          profile_image: user.profile_image,
+          bio: user.bio,
+          favorites: user.favorites,
+          followers: user.followers,
+          following: user.following,
+          reviews: user.reviews,
+          watchlist: user.watchlist,
+        }
       })
     } catch (err: any) {
       return res.status(500).send({

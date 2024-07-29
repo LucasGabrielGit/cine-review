@@ -5,7 +5,7 @@ import prisma from "../client/prisma";
 export class MovieSeriesController {
   async create(req: FastifyRequest, res: FastifyReply) {
     try {
-      const { data, genre_id } = req.body as { data: MovieSeries, genre_id: string[] }
+      const { data, genres } = req.body as { data: MovieSeries, genres: string[] }
       const movieAlreadyExists = await prisma.movieSeries.findFirst({
         where: {
           title: data.title
@@ -14,36 +14,60 @@ export class MovieSeriesController {
         }
       })
 
-      const genres = await prisma.genre.findMany({
+      const genresExists = await prisma.genre.findMany({
         where: {
-          genre_id: {
-            in: genre_id.map((genre: any) => genre.id)
+          name: {
+            in: genres.map((genre: any) => genre.name)
           }
         }
       })
 
-      console.log(genres)
+      const genreIds = genresExists.map((genre: any) => genre.genre_id)
 
-      // if (!movieAlreadyExists) {
-      //   await prisma.movieSeries.create({
-      //     data: {
-      //       ...data, genre: {
-      //         connect: genre_id.map((genre: any) => ({ genre_id: genre.id }))
-      //       }
-      //     }, include: {
-      //       genre: true
-      //     }
-      //   }).then(() => {
-      //     return res.status(201).send({
-      //       message: "Movie created successfully",
-      //       data
-      //     })
-      //   }).catch((err) => {
-      //     return res.status(500).send({
-      //       message: err.message
-      //     })
-      //   })
-      // }
+      if (!movieAlreadyExists) {
+        await prisma.movieSeries.create({
+          data: {
+            ...data, genre: {
+              connect: genreIds.map((genreId: any) => ({ genre_id: genreId })),
+              create: genres
+                .filter((genre: any) => !genreIds.includes(genre.genre_id))
+                .map((genre: any) => ({
+                  name: genre.name
+                }))
+
+            }
+          }, include: {
+            genre: true
+          }
+        }).then(() => {
+          return res.status(201).send({
+            message: "Movie created successfully",
+            data
+          })
+        }).catch((err) => {
+          return res.status(500).send({
+            message: err.message
+          })
+        })
+      }
+      await prisma.movieSeries.update({
+        where: {
+          id: movieAlreadyExists?.id
+        },
+        data: {
+          ...data, genre: {
+            connect: genresExists.map((genre: any) => ({ genre_id: genre.genre_id }))
+          }
+        },
+        include: {
+          genre: true
+        }
+      }).then(() => {
+        return res.status(201).send({
+          message: "Movie updated successfully",
+          data
+        })
+      })
     } catch (err: any) {
       return res.status(500).send({
         message: err.message
@@ -142,6 +166,9 @@ export class MovieSeriesController {
       })
     }
   }
-  async update(req: FastifyRequest, res: FastifyReply) { }
   async delete(req: FastifyRequest, res: FastifyReply) { }
+
+  async addToWatchList(req: FastifyRequest, res: FastifyReply) {
+
+  }
 }
