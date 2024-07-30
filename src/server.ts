@@ -33,8 +33,8 @@ app.post('/user/login', userController.login)
 app.post('/movie-series', { preHandler: ensureAuthenticate }, movieSeriesController.create)
 app.get('/movie-series/findAll', { preHandler: ensureAuthenticate }, movieSeriesController.list)
 app.get('/movie-series/:id', { preHandler: ensureAuthenticate }, movieSeriesController.findById)
-app.put('/movie-series/:id', { preHandler: ensureAuthenticate }, movieSeriesController.update)
 app.delete('/movie-series/:id', { preHandler: ensureAuthenticate }, movieSeriesController.delete)
+app.post('/movie-series/watchlist', { preHandler: ensureAuthenticate }, movieSeriesController.addToWatchList)
 
 // Reviews controllers routes
 app.post('/review', { preHandler: ensureAuthenticate }, reviewController.create)

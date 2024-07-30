@@ -1,4 +1,4 @@
-import type { MovieSeries } from "@prisma/client";
+import type { MovieSeries, Watchlist } from "@prisma/client";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import prisma from "../client/prisma";
 
@@ -166,9 +166,48 @@ export class MovieSeriesController {
       })
     }
   }
+
   async delete(req: FastifyRequest, res: FastifyReply) { }
 
   async addToWatchList(req: FastifyRequest, res: FastifyReply) {
+    try {
+      const { movie_series_id, user_id } = req.body as Watchlist
 
+      const checkWatchList = await prisma.watchlist.findFirst({
+        where: {
+          movie_series_id,
+          user_id
+        }
+      })
+
+      // se o filme ou serie ja foi favoritado, remove o favorito
+      if (checkWatchList) {
+        await prisma.watchlist.delete({
+          where: {
+            watchlist_id: checkWatchList.watchlist_id
+          }
+        })
+      } else {
+        await prisma.watchlist.create({
+          data: {
+            movie_series_id,
+            user_id
+          }
+        }).then(() => {
+
+          return res.status(200).send({
+            message: "Movie added to watchlist successfully"
+          })
+        }).catch((err) => {
+          return res.status(500).send({
+            message: err.message
+          })
+        })
+      }
+    } catch (error: any) {
+      return res.status(500).send({
+        message: error.message
+      })
+    }
   }
 }

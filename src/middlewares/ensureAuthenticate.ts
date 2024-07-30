@@ -17,7 +17,9 @@ export async function ensureAuthenticate(
   const [, token] = authToken.split(' ')
 
   try {
-    return jwt.verify(token, String(process.env.JWT_SECRET_TOKEN))
+    const decoded = jwt.verify(token, String(process.env.JWT_SECRET_TOKEN))
+    req.user = decoded
+    return
   } catch (err) {
     return res.status(401).send({
       message: 'Token de autenticação inválido',

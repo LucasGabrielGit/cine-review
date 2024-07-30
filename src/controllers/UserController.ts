@@ -68,7 +68,24 @@ export class UserController {
             }
           },
           reviews: true,
-          favorites: true
+          favorites: true,
+          watchlist: {
+            select:
+            {
+              movie_series: {
+                select: {
+                  title: true,
+                  poster_url: true,
+                  type: true,
+                  genre: {
+                    select: {
+                      name: true
+                    }
+                  },
+                }
+              }
+            }
+          }
         }
       })
 
@@ -257,9 +274,10 @@ export class UserController {
       }
       const user = await prisma.user.findFirst({
         where: {
-          email: email, OR: [
-            { username }
-          ]
+          OR: [
+            { email: email || "" },
+            { username: username || "" },
+          ],
         },
         select: {
           user_id: true,
@@ -319,7 +337,6 @@ export class UserController {
         expiresIn: "1d",
         subject: user.user_id
       })
-
 
       return res.status(200).send({
         token, user: {
