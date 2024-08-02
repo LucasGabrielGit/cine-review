@@ -274,10 +274,7 @@ export class UserController {
       }
       const user = await prisma.user.findFirst({
         where: {
-          OR: [
-            { email: email || "" },
-            { username: username || "" },
-          ],
+          email
         },
         select: {
           user_id: true,
