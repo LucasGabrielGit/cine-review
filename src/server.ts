@@ -28,6 +28,8 @@ app.get('/user/:id', { preHandler: ensureAuthenticate }, userController.findById
 app.put('/user/:id', { preHandler: ensureAuthenticate }, userController.update)
 app.delete('/user/:id', { preHandler: ensureAuthenticate }, userController.delete)
 app.post('/user/login', userController.login)
+app.post('/user/forgot-password', userController.forgotPassword)
+app.put('/user/reset-password', userController.resetPassword)
 
 // Movie and Series controllers routes
 app.post('/movie-series', { preHandler: ensureAuthenticate }, movieSeriesController.create)

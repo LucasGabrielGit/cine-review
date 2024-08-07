@@ -3,12 +3,13 @@ import prisma from "../client/prisma";
 import type { User } from "@prisma/client";
 import { compareSync, hashSync } from "bcrypt";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer"
 
 export class UserController {
   async create(req: FastifyRequest, res: FastifyReply) {
     try {
       const data = req.body as User
-      const hashedPassword = hashSync(data.password_hash, 8)
+      const hashedPassword = hashSync(data.password, 8)
       if (!await prisma.user.findUnique({
         where: {
           email: data.email
@@ -16,7 +17,7 @@ export class UserController {
       })) {
         await prisma.user.create({
           data: {
-            ...data, password_hash: hashedPassword
+            ...data, password: hashedPassword
           }
         })
         return res.status(201).send({
@@ -269,8 +270,8 @@ export class UserController {
 
   async login(req: FastifyRequest, res: FastifyReply) {
     try {
-      const { email, username, password_hash } = req.body as {
-        email?: string, username?: string, password_hash: string
+      const { email, password } = req.body as {
+        email?: string, username?: string, password: string
       }
       const user = await prisma.user.findFirst({
         where: {
@@ -281,7 +282,7 @@ export class UserController {
           bio: true,
           email: true,
           profile_image: true,
-          password_hash: true,
+          password: true,
           username: true,
           name: true,
           surname: true,
@@ -322,7 +323,7 @@ export class UserController {
         })
       }
 
-      const comparedPassword = compareSync(password_hash, user.password_hash)
+      const comparedPassword = compareSync(password, user.password)
 
       if (!comparedPassword) {
         return res.status(401).send({
@@ -355,6 +356,107 @@ export class UserController {
       return res.status(500).send({
         message: err.message
       })
+    }
+  }
+
+  async forgotPassword(req: FastifyRequest, res: FastifyReply) {
+    try {
+      const { email } = req.body as { email: string }
+
+      const user = await prisma.user.findUnique({
+        where: {
+          email
+        }
+      })
+
+      if (!user) {
+        return res.status(404).send({
+          message: "User not found"
+        })
+      }
+
+      const resetToken = jwt.sign({ email }, String(process.env.JWT_SECRET_TOKEN), {
+        expiresIn: "1h",
+      })
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: String(process.env.EMAIL),
+          pass: String(process.env.EMAIL_PASSWORD)
+        }
+      })
+      const mailOptions = {
+        from: process.env.EMAIL,
+        to: email,
+        subject: "Redefinir senha",
+        html: `
+          <p>Para redefinir sua senha, clique no seguinte link:</p>
+          <a href="http://localhost:5173/reset-password?token=${resetToken}">Redefinir senha</a></br>
+          <p>Se não solicitou esta alteração, ignore esta mensagem.</p>`
+      }
+
+      await transporter.sendMail(mailOptions)
+
+      res.send({ message: "Email sent", token: resetToken })
+    } catch (error: any) {
+      return res.status(500).send({
+        message: error.message
+      })
+    }
+  }
+
+  async resetPassword(req: FastifyRequest, res: FastifyReply) {
+    try {
+      const { token, password } = req.body as { token: string, password: string }
+
+      const decoded = jwt.verify(token, String(process.env.JWT_SECRET_TOKEN)) as { email: string }
+
+      if (typeof decoded === 'string' || !decoded.email) {
+        return res.status(400).send({
+          message: 'Invalid token.'
+        });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: {
+          email: decoded.email
+        }
+      })
+
+      if (!user) {
+        return res.status(404).send({ message: "User not found" })
+      }
+
+      const comparePassword = compareSync(password, user.password)
+
+      if (comparePassword) {
+        return res.status(400).send({
+          message: 'A senha não pode ser igual a anterior.'
+        })
+      }
+
+      if (user.resetPasswordUsed && user.resetPasswordToken === token) {
+        return res.status(400).send({
+          message: 'This token has already been used to reset the password.'
+        });
+      }
+
+      const hashedPassword = hashSync(password, 8)
+      await prisma.user.update({
+        where: {
+          email: decoded.email,
+        },
+        data: {
+          password: hashedPassword,
+          resetPasswordToken: token,
+          resetPasswordUsed: true
+        }
+      })
+      res.send({ message: "Password updated" })
+    } catch (error: any) {
+      return res.status(500).send({ message: error.message })
     }
   }
 }
